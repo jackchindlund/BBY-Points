@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin • Points</title>
+  <link rel="stylesheet" href="./style.css" />
+  <script src="https://unpkg.com/html5-qrcode@2.3.10/html5-qrcode.min.js"></script>
+</head>
+<body>
+  <header class="top">
+    <button id="btnBack" class="secondary">← Back</button>
+    <h1>Admin</h1>
+    <button id="btnResetPin" class="secondary">Reset PIN</button>
+  </header>
+
+  <main class="card">
+    <p class="muted">Create a new employee/card, or replace a lost card by reassigning a new scan code.</p>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="create">Create Card</button>
+      <button class="tab" data-tab="replace">Replace Card</button>
+      <button class="tab" data-tab="list">Employee List</button>
+    </div>
+
+    <section id="tab-create" class="panel">
+      <h2>Create Card</h2>
+
+      <div class="row">
+        <button id="btnStartCreateScan">Start Scan</button>
+        <button id="btnStopCreateScan" class="secondary hidden">Stop</button>
+      </div>
+      <div id="createReader" class="reader"></div>
+
+      <div class="grid">
+        <label>
+          Scanned code
+          <input id="createCode" placeholder="Scan a code…" />
+        </label>
+        <label>
+          Employee name
+          <input id="createName" placeholder="e.g., Jack" />
+        </label>
+        <label>
+          Starting points
+          <input id="createPoints" inputmode="numeric" placeholder="0" value="0" />
+        </label>
+      </div>
+
+      <div class="row">
+        <button id="btnCreate">Create</button>
+      </div>
+
+      <p id="createMsg" class="muted"></p>
+    </section>
+
+    <section id="tab-replace" class="panel hidden">
+      <h2>Replace Card</h2>
+
+      <div class="row">
+        <button id="btnStartReplaceScan">Scan New Card</button>
+        <button id="btnStopReplaceScan" class="secondary hidden">Stop</button>
+      </div>
+      <div id="replaceReader" class="reader"></div>
+
+      <div class="grid">
+        <label>
+          New scanned code
+          <input id="replaceCode" placeholder="Scan the NEW card…" />
+        </label>
+
+        <label>
+          Pick employee
+          <select id="replaceEmployee">
+            <option value="">Loading…</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="row">
+        <button id="btnReplace">Reassign</button>
+      </div>
+
+      <p id="replaceMsg" class="muted"></p>
+    </section>
+
+    <section id="tab-list" class="panel hidden">
+      <h2>Employees</h2>
+
+      <div class="row">
+        <input id="search" placeholder="Search name…" />
+        <button id="btnRefresh" class="secondary">Refresh</button>
+      </div>
+
+      <div id="empList" class="list"></div>
+      <p id="listMsg" class="muted"></p>
+    </section>
+  </main>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
