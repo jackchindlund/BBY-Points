@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Employee • Points</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header class="top">
+    <button id="btnBack" class="secondary">← Back</button>
+    <h1>Employee</h1>
+    <button id="btnResetPin" class="secondary">Reset PIN</button>
+  </header>
+
+  <main class="card">
+    <div id="loading" class="muted">Loading…</div>
+
+    <section id="empSection" class="hidden">
+      <h2 id="empName">—</h2>
+      <div class="big">
+        Balance: <span id="empPoints">0</span>
+      </div>
+
+      <hr />
+
+      <h3>Adjust Points</h3>
+      <p class="muted">You’ll be prompted for PIN the first time you try to change points on a phone.</p>
+
+      <div class="row wrap">
+        <button class="delta" data-delta="5">+5</button>
+        <button class="delta" data-delta="10">+10</button>
+        <button class="delta" data-delta="25">+25</button>
+        <button class="delta danger" data-delta="-5">-5</button>
+        <button class="delta danger" data-delta="-10">-10</button>
+        <button class="delta danger" data-delta="-25">-25</button>
+      </div>
+
+      <div class="grid">
+        <label>
+          Custom delta (ex: 7 or -3)
+          <input id="customDelta" inputmode="numeric" placeholder="10" />
+        </label>
+        <label>
+          Reason (optional)
+          <input id="reason" placeholder="e.g., great close / challenge win" />
+        </label>
+      </div>
+
+      <div class="row">
+        <button id="btnApplyCustom">Apply</button>
+      </div>
+
+      <p id="msg" class="muted"></p>
+
+      <hr />
+
+      <h3>Recent Activity</h3>
+      <div id="txList" class="list"></div>
+    </section>
+  </main>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
