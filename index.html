@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Points</title>
+  <link rel="stylesheet" href="./style.css" />
+  <script src="https://unpkg.com/html5-qrcode@2.3.10/html5-qrcode.min.js"></script>
+</head>
+<body>
+  <header class="top">
+    <h1>Points</h1>
+    <div class="row">
+      <button id="btnAdmin" class="secondary">Admin</button>
+    </div>
+  </header>
+
+  <main class="card">
+    <section id="scanSection">
+      <h2>Scan Card</h2>
+      <p class="muted">Scan a QR code or barcode to open an employee.</p>
+
+      <div class="row">
+        <button id="btnStartScan">Start Scan</button>
+        <button id="btnStopScan" class="secondary hidden">Stop</button>
+      </div>
+
+      <div id="reader" class="reader"></div>
+
+      <hr />
+
+      <h3>Or type code</h3>
+      <div class="row">
+        <input id="manualCode" placeholder="Paste/Type code here" />
+        <button id="btnLookup">Lookup</button>
+      </div>
+
+      <p id="scanMsg" class="muted"></p>
+    </section>
+  </main>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
