@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Leaderboard</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bb-blue: #003B64;
+      --bb-yellow: #FFE000;
+      --arcade-black: #07070A;
+      --arcade-cyan: #00e5ff;
+      --arcade-pink: #ff2bd6;
+      --arcade-white: #f2f6ff;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0; min-height:100vh; color:var(--arcade-white);
+      background:
+        radial-gradient(1200px 700px at 20% 10%, rgba(255,224,0,0.12), transparent 60%),
+        radial-gradient(900px 600px at 80% 30%, rgba(0,229,255,0.10), transparent 55%),
+        radial-gradient(900px 700px at 50% 90%, rgba(255,43,214,0.08), transparent 60%),
+        linear-gradient(180deg, #000 0%, var(--arcade-black) 40%, #000 100%);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      overflow-x:hidden;
+    }
+    body::before{
+      content:""; position:fixed; inset:0; pointer-events:none;
+      background: repeating-linear-gradient(to bottom,
+        rgba(255,255,255,0.04) 0px,
+        rgba(255,255,255,0.04) 1px,
+        rgba(0,0,0,0) 3px,
+        rgba(0,0,0,0) 6px);
+      opacity:.20; mix-blend-mode:overlay;
+    }
+    .frame{
+      max-width:1100px; margin:26px auto; padding:18px;
+      border-radius:18px;
+      border:2px solid rgba(255,255,255,0.10);
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      position:relative;
+      box-shadow: 0 0 0 2px rgba(0,0,0,0.35) inset, 0 18px 60px rgba(0,0,0,0.6);
+    }
+    .frame::after{
+      content:""; position:absolute; inset:-2px; border-radius:20px; padding:2px;
+      background: linear-gradient(90deg, rgba(255,224,0,0.9), rgba(0,229,255,0.8), rgba(255,43,214,0.7), rgba(255,224,0,0.9));
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+      opacity:.35; pointer-events:none;
+    }
+    .topbar{
+      display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap;
+      padding:10px 10px 16px 10px;
+      border-bottom:1px solid rgba(255,255,255,0.10);
+      margin-bottom:16px;
+    }
+    h1{
+      margin:0;
+      font-family:"Press Start 2P", system-ui, sans-serif;
+      font-size:22px; line-height:1.35;
+      color:var(--bb-yellow);
+      text-shadow: 0 0 10px rgba(255,224,0,0.35);
+    }
+    .subtitle{
+      margin-top:10px;
+      font-size:13px;
+      color:rgba(242,246,255,0.75);
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+    }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:7px 10px; border-radius:999px;
+      border:1px solid rgba(255,255,255,0.14);
+      background:rgba(255,255,255,0.04);
+      font-size:12px;
+    }
+    .badge{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px; border-radius:12px;
+      border:1px solid rgba(255,224,0,0.25);
+      background:rgba(255,224,0,0.08);
+      font-size:12px; font-weight:800;
+      color:rgba(255,224,0,0.95);
+    }
+    .spark{
+      width:10px; height:10px; border-radius:999px;
+      background:var(--arcade-cyan);
+      box-shadow:0 0 14px rgba(0,229,255,0.8);
+    }
+    .btn{
+      border:1px solid rgba(0,229,255,0.35);
+      background:rgba(0,229,255,0.10);
+      color:rgba(242,246,255,0.95);
+      padding:10px 12px;
+      border-radius:12px;
+      font-weight:900;
+      cursor:pointer;
+      text-transform:uppercase;
+      letter-spacing:0.08em;
+      font-size:11px;
+      box-shadow:0 0 18px rgba(0,229,255,0.12);
+    }
+    .grid{ display:grid; grid-template-columns:1fr 1.2fr 1fr; gap:14px; margin-bottom:16px; }
+    .pod{
+      border-radius:16px; border:1px solid rgba(255,255,255,0.14);
+      background:rgba(255,255,255,0.04);
+      padding:14px; position:relative; overflow:hidden;
+      min-height:130px;
+    }
+    .pod::before{
+      content:""; position:absolute; inset:-60px -60px auto auto;
+      width:160px; height:160px; border-radius:999px;
+      opacity:.18; transform:rotate(15deg);
+    }
+    .pod.gold::before{ background:rgba(255,224,0,1); }
+    .pod.silver::before{ background:rgba(0,229,255,1); }
+    .pod.bronze::before{ background:rgba(255,43,214,1); }
+    .pod .rank{ font-family:"Press Start 2P", system-ui, sans-serif; font-size:12px; color:rgba(242,246,255,0.75); }
+    .pod .name{ margin-top:10px; font-weight:1000; font-size:22px; }
+    .pod .points{ margin-top:8px; font-family:"Press Start 2P", system-ui, sans-serif; font-size:12px; color:rgba(242,246,255,0.80); }
+    .pod .emoji{ position:absolute; right:12px; top:10px; font-size:24px; }
+    .tableWrap{
+      border-radius:16px; overflow:hidden;
+      border:1px solid rgba(255,255,255,0.14);
+      background:rgba(255,255,255,0.03);
+    }
+    table{ width:100%; border-collapse:collapse; }
+    th,td{ padding:14px 14px; text-align:left; }
+    th{
+      font-family:"Press Start 2P", system-ui, sans-serif;
+      font-size:11px; letter-spacing:0.12em; text-transform:uppercase;
+      color:rgba(242,246,255,0.70);
+      background: linear-gradient(90deg, rgba(0,59,100,0.55), rgba(255,224,0,0.08));
+      border-bottom:1px solid rgba(255,255,255,0.10);
+    }
+    tr{ border-bottom:1px solid rgba(255,255,255,0.06); }
+    tr:last-child{ border-bottom:none; }
+    td{ font-size:14px; color:rgba(242,246,255,0.92); }
+    td.rankCell{
+      width:110px;
+      color:rgba(242,246,255,0.70);
+      font-family:"Press Start 2P", system-ui, sans-serif;
+      font-size:12px;
+    }
+    td.pointsCell{
+      text-align:right;
+      font-family:"Press Start 2P", system-ui, sans-serif;
+      font-size:12px;
+    }
+    .score{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px; border-radius:999px;
+      border:1px solid rgba(255,224,0,0.25);
+      background:rgba(255,224,0,0.10);
+      color:rgba(255,224,0,0.95);
+      box-shadow:0 0 18px rgba(255,224,0,0.12);
+    }
+    .msg{ margin:10px 0 0; color:rgba(242,246,255,0.70); font-size:13px; }
+
+    @media (max-width: 900px){
+      .grid{ grid-template-columns:1fr; }
+      .pod .name{ font-size:20px; }
+    }
+  </style>
+
+  <!-- ✅ TV-friendly Firebase compat builds (no ES modules) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <div class="frame">
+    <div class="topbar">
+      <div>
+        <h1>🏆 BEST BUY ARCADE LEADERBOARD</h1>
+        <div class="subtitle">
+          <span class="badge"><span class="spark"></span> LIVE</span>
+          <span class="pill">Auto-refresh: <strong id="refreshEvery">5s</strong></span>
+          <span class="pill">Last updated: <strong id="lastUpdated">—</strong></span>
+          <span class="pill">Showing: <strong>Top 10</strong></span>
+        </div>
+        <div id="msg" class="msg"></div>
+      </div>
+
+      <div>
+        <button id="btnRefresh" class="btn">Refresh</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="pod silver">
+        <div class="emoji">🥈</div>
+        <div class="rank">#2</div>
+        <div class="name" id="p2Name">—</div>
+        <div class="points" id="p2Points">—</div>
+      </div>
+
+      <div class="pod gold">
+        <div class="emoji">🥇</div>
+        <div class="rank">#1</div>
+        <div class="name" id="p1Name">—</div>
+        <div class="points" id="p1Points">—</div>
+      </div>
+
+      <div class="pod bronze">
+        <div class="emoji">🥉</div>
+        <div class="rank">#3</div>
+        <div class="name" id="p3Name">—</div>
+        <div class="points" id="p3Points">—</div>
+      </div>
+    </div>
+
+    <div class="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:110px;">Rank</th>
+            <th>Name</th>
+            <th style="text-align:right;">Points</th>
+          </tr>
+        </thead>
+        <tbody id="rows">
+          <tr><td colspan="3" style="color: rgba(242,246,255,0.65);">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // ✅ Paste your config here (same as your app.js)
+    const firebaseConfig = {
+      apiKey: "PASTE_ME",
+      authDomain: "PASTE_ME.firebaseapp.com",
+      projectId: "PASTE_ME",
+      storageBucket: "PASTE_ME.appspot.com",
+      messagingSenderId: "PASTE_ME",
+      appId: "PASTE_ME"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const REFRESH_SECONDS = 5;
+    const TOP_N = 10;
+
+    const $ = (id) => document.getElementById(id);
+
+    function escapeHtml(s) {
+      return String(s ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function setText(id, text) {
+      const el = $(id);
+      if (el) el.textContent = text;
+    }
+
+    function formatTime(d = new Date()) {
+      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    }
+
+    function setPodium(list) {
+      const p1 = list[0] || null;
+      const p2 = list[1] || null;
+      const p3 = list[2] || null;
+
+      setText("p1Name", p1 ? p1.name : "—");
+      setText("p1Points", p1 ? `${p1.points} pts` : "—");
+
+      setText("p2Name", p2 ? p2.name : "—");
+      setText("p2Points", p2 ? `${p2.points} pts` : "—");
+
+      setText("p3Name", p3 ? p3.name : "—");
+      setText("p3Points", p3 ? `${p3.points} pts` : "—");
+    }
+
+    function renderRows(list) {
+      const rows = $("rows");
+      if (!rows) return;
+
+      if (!list.length) {
+        rows.innerHTML = `<tr><td colspan="3" style="color: rgba(242,246,255,0.65);">No employees yet.</td></tr>`;
+        return;
+      }
+
+      rows.innerHTML = list.map((e, idx) => `
+        <tr>
+          <td class="rankCell">#${idx + 1}</td>
+          <td>${escapeHtml(e.name)}</td>
+          <td class="pointsCell"><span class="score">${e.points}</span></td>
+        </tr>
+      `).join("");
+    }
+
+    let refreshing = false;
+
+    async function refreshLeaderboard() {
+      if (refreshing) return;
+      refreshing = true;
+      setText("msg", "");
+
+      try {
+        const snap = await db.collection("employees")
+          .orderBy("points", "desc")
+          .limit(TOP_N)
+          .get();
+
+        const list = [];
+        snap.forEach(doc => {
+          const d = doc.data() || {};
+          list.push({
+            id: doc.id,
+            name: d.name || "(no name)",
+            points: Number(d.points ?? 0)
+          });
+        });
+
+        setPodium(list);
+        renderRows(list);
+        setText("lastUpdated", formatTime(new Date()));
+      } catch (e) {
+        setText("msg", "Error loading leaderboard: " + (e?.message || e));
+      } finally {
+        refreshing = false;
+      }
+    }
+
+    // Wire UI + start
+    setText("refreshEvery", `${REFRESH_SECONDS}s`);
+    $("btnRefresh")?.addEventListener("click", refreshLeaderboard);
+    refreshLeaderboard();
+    setInterval(refreshLeaderboard, REFRESH_SECONDS * 1000);
+  </script>
+</body>
+</html>
