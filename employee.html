@@ -8,35 +8,49 @@
 </head>
 <body>
   <header class="top">
-    <button id="btnBack" class="secondary">← Back</button>
-    <h1>Employee</h1>
+    <div class="brand">
+      <button id="btnBack" class="secondary">← Back</button>
+      <div>
+        <h1 class="title">Employee</h1>
+        <div class="subtitle">Balance, adjustments, and activity</div>
+      </div>
+    </div>
+
     <button id="btnResetPin" class="secondary">Reset PIN</button>
   </header>
 
   <main class="card">
     <div id="loading" class="muted">Loading…</div>
 
-    <section id="empSection" class="hidden">
-      <h2 id="empName">—</h2>
-      <div class="big">
-        Balance: <span id="empPoints">0</span>
+    <section id="empSection" class="hidden panel">
+      <div class="panelHead">
+        <div>
+          <h2 id="empName">—</h2>
+          <div class="muted">Employee points account</div>
+        </div>
+        <span class="pill live">Live</span>
       </div>
 
-      <hr />
+      <div class="stat">
+        <div class="statLabel">Balance</div>
+        <div class="statValue"><span id="empPoints">0</span> <span class="statUnit">pts</span></div>
+      </div>
+
+      <div class="divider"></div>
 
       <h3>Adjust Points</h3>
       <p class="muted">You’ll be prompted for PIN the first time you try to change points on a phone.</p>
 
       <div class="row wrap">
-        <button class="delta" data-delta="5">+5</button>
-        <button class="delta" data-delta="10">+10</button>
-        <button class="delta" data-delta="25">+25</button>
+        <button class="delta primary" data-delta="5">+5</button>
+        <button class="delta primary" data-delta="10">+10</button>
+        <button class="delta primary" data-delta="25">+25</button>
         <button class="delta danger" data-delta="-5">-5</button>
         <button class="delta danger" data-delta="-10">-10</button>
         <button class="delta danger" data-delta="-25">-25</button>
       </div>
 
-      <div class="grid">
+      <div class="grid grid2">
         <label>
           Custom delta (ex: 7 or -3)
           <input id="customDelta" inputmode="numeric" placeholder="10" />
@@ -48,12 +62,12 @@
       </div>
 
       <div class="row">
-        <button id="btnApplyCustom">Apply</button>
+        <button id="btnApplyCustom" class="primary">Apply</button>
       </div>
 
       <p id="msg" class="muted"></p>
 
-      <hr />
+      <div class="divider"></div>
 
       <h3>Recent Activity</h3>
       <div id="txList" class="list"></div>
