@@ -29,7 +29,6 @@ const firebaseConfig = {
   measurementId: "G-R69995EWFH"
 };
 
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -235,7 +234,7 @@ async function initEmployee() {
     btn.addEventListener("click", async () => {
       const delta = Number(btn.dataset.delta);
       const reason = cleanCode($("reason")?.value);
-      await tryApplyDelta(emp.id, delta, reason);
+      await tryApplyDelta(emp.id, emp.name || "(No name)", delta, reason);
     });
   });
 
@@ -247,11 +246,11 @@ async function initEmployee() {
       return;
     }
     const reason = cleanCode($("reason")?.value);
-    await tryApplyDelta(emp.id, delta, reason);
+    await tryApplyDelta(emp.id, emp.name || "(No name)", delta, reason);
   });
 }
 
-async function tryApplyDelta(employeeId, delta, reason) {
+async function tryApplyDelta(employeeId, employeeName, delta, reason) {
   const msg = $("msg");
   if (msg) msg.textContent = "Saving…";
 
@@ -264,27 +263,48 @@ async function tryApplyDelta(employeeId, delta, reason) {
   }
 
   try {
-    await applyDelta(employeeId, delta, reason, pin);
+    await applyDelta(employeeId, employeeName, delta, reason, pin);
     if (msg) msg.textContent = `Done (${delta > 0 ? "+" : ""}${delta}).`;
   } catch (e) {
     if (msg) msg.textContent = `Error: ${e.message}`;
   }
 }
 
-async function applyDelta(employeeId, delta, reason, pin) {
+/**
+ * Daily logic:
+ * - Overall points always change by delta.
+ * - dailyPoints ONLY increases when delta > 0 (earned today).
+ *   Negative “spend” does NOT touch dailyPoints.
+ */
+async function applyDelta(employeeId, employeeName, delta, reason, pin) {
   const empRef = doc(db, "employees", employeeId);
   const empSnap = await getDoc(empRef);
   if (!empSnap.exists()) throw new Error("Employee not found.");
 
-  const current = Number(empSnap.data().points ?? 0);
+  const data = empSnap.data();
+  const current = Number(data.points ?? 0);
+  const currentDaily = Number(data.dailyPoints ?? 0);
+
   const next = current + delta;
 
-  // Update balance (include pin for rules)
-  await updateDoc(empRef, { points: next, pin });
+  // Only count positive earnings toward dailyPoints
+  const dailyEarned = delta > 0 ? delta : 0;
+  const nextDaily = currentDaily + dailyEarned;
+
+  // Update balance + dailyPoints (include pin for rules)
+  await updateDoc(empRef, {
+    points: next,
+    dailyPoints: nextDaily,
+    pin
+  });
 
   // Write transaction log (include pin for rules)
+  // Include employeeName so public Recent feed can show names without extra lookups.
   await addDoc(collection(db, "employees", employeeId, "transactions"), {
+    employeeId,
+    employeeName,
     delta,
+    dailyEarned, // 0 for negative spends, >0 for earns
     reason: reason || "",
     createdAt: serverTimestamp(),
     pin
@@ -332,6 +352,9 @@ async function loadRecentTransactions(employeeId) {
 async function initAdmin() {
   $("btnBack")?.addEventListener("click", () => go("./index.html"));
   $("btnResetPin")?.addEventListener("click", resetPin);
+
+  // NEW: Reset Daily button
+  $("btnResetDaily")?.addEventListener("click", resetDailyPoints);
 
   // Tabs
   document.querySelectorAll(".tab").forEach(t => {
@@ -426,11 +449,14 @@ async function createEmployeeAndCard() {
 
   msg.textContent = "Creating…";
 
+  const dailyStart = pts > 0 ? pts : 0;
+
   // Create employee with auto ID
   const empRef = doc(collection(db, "employees"));
   await setDoc(empRef, {
     name,
     points: pts,
+    dailyPoints: dailyStart,
     createdAt: serverTimestamp(),
     pin
   });
@@ -446,7 +472,10 @@ async function createEmployeeAndCard() {
   // Optional: starting transaction
   if (pts !== 0) {
     await addDoc(collection(db, "employees", empRef.id, "transactions"), {
+      employeeId: empRef.id,
+      employeeName: name,
       delta: pts,
+      dailyEarned: pts > 0 ? pts : 0,
       reason: "starting points",
       createdAt: serverTimestamp(),
       pin
@@ -543,7 +572,12 @@ async function refreshEmployeeList() {
   const employees = [];
   empSnap.forEach(docSnap => {
     const d = docSnap.data();
-    employees.push({ id: docSnap.id, name: d.name || "(no name)", points: d.points ?? 0 });
+    employees.push({
+      id: docSnap.id,
+      name: d.name || "(no name)",
+      points: d.points ?? 0,
+      dailyPoints: d.dailyPoints ?? 0
+    });
   });
 
   let filtered = employees;
@@ -563,12 +597,47 @@ async function refreshEmployeeList() {
     return `
       <div class="item">
         <div class="title">${escapeHtml(e.name)}</div>
-        <div class="sub">Points: ${e.points} • Code: ${escapeHtml(code)}</div>
+        <div class="sub">Points: ${e.points} • Daily: ${e.dailyPoints} • Code: ${escapeHtml(code)}</div>
       </div>
     `;
   }).join("");
 
   if (filtered.length === 0) list.innerHTML = `<div class="muted">No matches.</div>`;
+}
+
+/**
+ * Manual daily reset (Admin):
+ * Sets dailyPoints = 0 for all employees.
+ */
+async function resetDailyPoints() {
+  const msg = $("listMsg") || $("createMsg") || $("replaceMsg");
+  if (msg) msg.textContent = "";
+
+  if (!confirm("Reset DAILY points for everyone to 0?")) return;
+
+  let pin;
+  try {
+    pin = requireValidPinOrThrow();
+  } catch {
+    if (msg) msg.textContent = "Wrong PIN. (No changes made.)";
+    return;
+  }
+
+  if (msg) msg.textContent = "Resetting daily points…";
+
+  const snap = await getDocs(collection(db, "employees"));
+  const updates = [];
+  snap.forEach(docSnap => {
+    updates.push(updateDoc(doc(db, "employees", docSnap.id), { dailyPoints: 0, pin }));
+  });
+
+  try {
+    await Promise.all(updates);
+    if (msg) msg.textContent = "Daily points reset to 0 for everyone.";
+    await refreshEmployeeList();
+  } catch (e) {
+    if (msg) msg.textContent = `Error resetting daily points: ${e.message}`;
+  }
 }
 
 // ---- Boot ----
