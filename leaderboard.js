@@ -2,16 +2,13 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/fireba
 import {
   getFirestore,
   collection,
+  collectionGroup,
   query,
   orderBy,
   limit,
   getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-/**
- * Paste the SAME Firebase config you used in app.js here.
- * Firebase Console → Project Settings → Your apps → Web app config
- */
 const firebaseConfig = {
   apiKey: "AIzaSyBsJ2TtO7oiYmt5LjY4swB8U_61eEQuZBE",
   authDomain: "bestbuydebitcards.firebaseapp.com",
@@ -27,8 +24,10 @@ const db = getFirestore(app);
 
 const $ = (id) => document.getElementById(id);
 
-const REFRESH_SECONDS = 5; // "live" refresh interval
+const REFRESH_SECONDS = 5;
 const TOP_N = 10;
+const RECENT_SHOW = 12;
+const RECENT_FETCH = 35; // fetch more then filter positive
 
 function escapeHtml(s) {
   return String(s ?? "")
@@ -44,23 +43,27 @@ function setText(id, text) {
   if (el) el.textContent = text;
 }
 
-function setPodium(list) {
+function formatTime(d = new Date()) {
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
+
+function setPodium(prefix, list) {
   const p1 = list[0] || null;
   const p2 = list[1] || null;
   const p3 = list[2] || null;
 
-  setText("p1Name", p1 ? p1.name : "—");
-  setText("p1Points", p1 ? `${p1.points} pts` : "—");
+  setText(`${prefix}1Name`, p1 ? p1.name : "—");
+  setText(`${prefix}1Points`, p1 ? `${p1.points} pts` : "—");
 
-  setText("p2Name", p2 ? p2.name : "—");
-  setText("p2Points", p2 ? `${p2.points} pts` : "—");
+  setText(`${prefix}2Name`, p2 ? p2.name : "—");
+  setText(`${prefix}2Points`, p2 ? `${p2.points} pts` : "—");
 
-  setText("p3Name", p3 ? p3.name : "—");
-  setText("p3Points", p3 ? `${p3.points} pts` : "—");
+  setText(`${prefix}3Name`, p3 ? p3.name : "—");
+  setText(`${prefix}3Points`, p3 ? `${p3.points} pts` : "—");
 }
 
-function renderRows(list) {
-  const rows = $("rows");
+function renderRows(tbodyId, list, scoreClass = "") {
+  const rows = $(tbodyId);
   if (!rows) return;
 
   if (!list.length) {
@@ -68,26 +71,19 @@ function renderRows(list) {
     return;
   }
 
-  // If you want tie-aware ranks later, we can do that. For now: 1..10.
   rows.innerHTML = list.map((e, idx) => `
     <tr>
       <td class="rankCell">#${idx + 1}</td>
       <td>${escapeHtml(e.name)}</td>
-      <td class="pointsCell"><span class="score">${e.points}</span></td>
+      <td class="pointsCell"><span class="score ${scoreClass}">${e.points}</span></td>
     </tr>
   `).join("");
 }
 
-function formatTime(d = new Date()) {
-  // Looks nice on a scoreboard
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-}
-
-async function fetchTopEmployees() {
-  // Pull top 10 employees by points
+async function fetchTopEmployees(fieldName) {
   const qy = query(
     collection(db, "employees"),
-    orderBy("points", "desc"),
+    orderBy(fieldName, "desc"),
     limit(TOP_N)
   );
 
@@ -99,26 +95,101 @@ async function fetchTopEmployees() {
     list.push({
       id: docSnap.id,
       name: d.name || "(no name)",
-      points: Number(d.points ?? 0)
+      points: Number(d[fieldName] ?? 0)
     });
   });
 
   return list;
 }
 
+function tsToDate(ts) {
+  try {
+    if (!ts) return null;
+    if (typeof ts.toDate === "function") return ts.toDate();
+  } catch {}
+  return null;
+}
+
+async function fetchRecentEarns() {
+  // Pull latest transactions across all employees
+  const qy = query(
+    collectionGroup(db, "transactions"),
+    orderBy("createdAt", "desc"),
+    limit(RECENT_FETCH)
+  );
+
+  const snap = await getDocs(qy);
+
+  const earns = [];
+  snap.forEach(docSnap => {
+    const d = docSnap.data();
+
+    const delta = Number(d.delta ?? 0);
+    const dailyEarned = Number(d.dailyEarned ?? (delta > 0 ? delta : 0));
+    if (dailyEarned <= 0) return; // only show positive earns
+
+    earns.push({
+      employeeName: d.employeeName || "(no name)",
+      points: dailyEarned,
+      reason: d.reason || "",
+      createdAt: tsToDate(d.createdAt)
+    });
+  });
+
+  return earns.slice(0, RECENT_SHOW);
+}
+
+function renderRecentEarns(list) {
+  const wrap = $("recentTx");
+  if (!wrap) return;
+
+  if (!list.length) {
+    wrap.innerHTML = `<div class="txRow" style="color: rgba(242,246,255,0.65);">No earns yet.</div>`;
+    return;
+  }
+
+  wrap.innerHTML = list.map(tx => {
+    const time = tx.createdAt
+      ? tx.createdAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      : "—";
+    const reason = tx.reason ? escapeHtml(tx.reason) : "";
+    return `
+      <div class="txRow">
+        <div class="txLeft">
+          <div class="txName">${escapeHtml(tx.employeeName)}</div>
+          <div class="txReason">${reason}</div>
+        </div>
+        <div class="txRight">
+          <span class="score daily">+${tx.points}</span>
+          <div class="txTime">${time}</div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
 let refreshing = false;
 
-async function refreshLeaderboard() {
+async function refreshAll() {
   if (refreshing) return;
   refreshing = true;
 
-  setText("msg", ""); // clear previous error
+  setText("msg", "");
 
   try {
-    const list = await fetchTopEmployees();
+    const [overall, daily, recent] = await Promise.all([
+      fetchTopEmployees("points"),
+      fetchTopEmployees("dailyPoints"),
+      fetchRecentEarns()
+    ]);
 
-    setPodium(list);
-    renderRows(list);
+    setPodium("p", overall);
+    renderRows("rows", overall, "");
+
+    setPodium("d", daily);
+    renderRows("drows", daily, "daily");
+
+    renderRecentEarns(recent);
 
     setText("lastUpdated", formatTime(new Date()));
   } catch (e) {
@@ -129,20 +200,11 @@ async function refreshLeaderboard() {
 }
 
 function wireUI() {
-  // Show refresh interval on page
   setText("refreshEvery", `${REFRESH_SECONDS}s`);
+  $("btnRefresh")?.addEventListener("click", refreshAll);
 
-  $("btnRefresh")?.addEventListener("click", () => {
-    refreshLeaderboard();
-  });
-
-  // First load
-  refreshLeaderboard();
-
-  // Auto refresh (live)
-  setInterval(() => {
-    refreshLeaderboard();
-  }, REFRESH_SECONDS * 1000);
+  refreshAll();
+  setInterval(refreshAll, REFRESH_SECONDS * 1000);
 }
 
 wireUI();
