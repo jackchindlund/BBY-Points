@@ -5,30 +5,24 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Leaderboard</title>
 
-  <!-- Optional: pixel/arcade-ish font (Google Fonts). If you want zero external deps, remove these 2 lines. -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --bb-blue: #003B64;      /* Best Buy-ish blue */
-      --bb-yellow: #FFE000;    /* Best Buy-ish yellow */
+      --bb-blue: #003B64;
+      --bb-yellow: #FFE000;
       --arcade-black: #07070A;
-      --arcade-purple: #7c3aed;
       --arcade-cyan: #00e5ff;
       --arcade-pink: #ff2bd6;
       --arcade-white: #f2f6ff;
       --glass: rgba(255,255,255,0.06);
       --border: rgba(255,255,255,0.14);
     }
-
     *{ box-sizing: border-box; }
-
     body{
-      margin:0;
-      min-height:100vh;
-      color: var(--arcade-white);
+      margin:0; min-height:100vh; color: var(--arcade-white);
       background:
         radial-gradient(1200px 700px at 20% 10%, rgba(255,224,0,0.12), transparent 60%),
         radial-gradient(900px 600px at 80% 30%, rgba(0,229,255,0.10), transparent 55%),
@@ -37,64 +31,46 @@
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       overflow-x: hidden;
     }
-
-    /* Subtle scanline effect */
     body::before{
-      content:"";
-      position: fixed;
-      inset:0;
-      pointer-events:none;
-      background: repeating-linear-gradient(
-        to bottom,
+      content:""; position:fixed; inset:0; pointer-events:none;
+      background: repeating-linear-gradient(to bottom,
         rgba(255,255,255,0.04) 0px,
         rgba(255,255,255,0.04) 1px,
         rgba(0,0,0,0) 3px,
-        rgba(0,0,0,0) 6px
-      );
-      opacity: 0.20;
-      mix-blend-mode: overlay;
+        rgba(0,0,0,0) 6px);
+      opacity:0.20; mix-blend-mode: overlay;
     }
 
-    /* Neon border glow */
     .frame{
-      max-width: 1100px;
+      max-width: 1250px;
       margin: 26px auto;
       padding: 18px;
       border-radius: 18px;
       border: 2px solid rgba(255,255,255,0.10);
       background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
       position: relative;
-      box-shadow:
-        0 0 0 2px rgba(0,0,0,0.35) inset,
-        0 18px 60px rgba(0,0,0,0.6);
+      box-shadow: 0 0 0 2px rgba(0,0,0,0.35) inset, 0 18px 60px rgba(0,0,0,0.6);
     }
-
     .frame::after{
       content:"";
-      position:absolute;
-      inset:-2px;
-      border-radius: 20px;
-      padding: 2px;
+      position:absolute; inset:-2px; border-radius: 20px; padding: 2px;
       background: linear-gradient(90deg,
         rgba(255,224,0,0.9),
         rgba(0,229,255,0.8),
         rgba(255,43,214,0.7),
         rgba(255,224,0,0.9)
       );
-      -webkit-mask:
-        linear-gradient(#000 0 0) content-box,
-        linear-gradient(#000 0 0);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
       -webkit-mask-composite: xor;
               mask-composite: exclude;
       opacity: 0.35;
-      filter: blur(0.2px);
       pointer-events:none;
     }
 
     .topbar{
       display:flex;
-      align-items: flex-start;
-      justify-content: space-between;
+      align-items:flex-start;
+      justify-content:space-between;
       gap: 14px;
       flex-wrap: wrap;
       padding: 10px 10px 16px 10px;
@@ -107,19 +83,14 @@
       flex-direction: column;
       gap: 8px;
     }
-
     .title h1{
       margin:0;
       font-family: "Press Start 2P", system-ui, sans-serif;
       font-size: 22px;
       line-height: 1.35;
-      letter-spacing: 0.02em;
       color: var(--bb-yellow);
-      text-shadow:
-        0 0 10px rgba(255,224,0,0.35),
-        0 0 22px rgba(0,229,255,0.10);
+      text-shadow: 0 0 10px rgba(255,224,0,0.35), 0 0 22px rgba(0,229,255,0.10);
     }
-
     .subtitle{
       font-size: 13px;
       color: rgba(242,246,255,0.75);
@@ -128,7 +99,6 @@
       flex-wrap: wrap;
       align-items: center;
     }
-
     .pill{
       display:inline-flex;
       align-items:center;
@@ -140,7 +110,6 @@
       font-size: 12px;
       backdrop-filter: blur(6px);
     }
-
     .badge{
       display:inline-flex;
       align-items:center;
@@ -153,14 +122,19 @@
       color: rgba(255,224,0,0.95);
       font-weight: 800;
     }
-
+    .spark{
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--arcade-cyan);
+      box-shadow: 0 0 14px rgba(0,229,255,0.8);
+    }
     .rightInfo{
       display:flex;
       gap: 10px;
       align-items:center;
       flex-wrap: wrap;
     }
-
     .btn{
       border: 1px solid rgba(0,229,255,0.35);
       background: rgba(0,229,255,0.10);
@@ -176,13 +150,45 @@
     }
     .btn:active{ transform: scale(0.99); }
 
-    .grid{
+    .dual{
       display:grid;
-      grid-template-columns: 1fr 1.2fr 1fr;
+      grid-template-columns: 1fr 1fr;
       gap: 14px;
       margin-bottom: 16px;
     }
 
+    .board{
+      border-radius: 16px;
+      overflow:hidden;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 0 0 2px rgba(0,0,0,0.25) inset;
+    }
+    .boardHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+      background: linear-gradient(90deg, rgba(0,59,100,0.55), rgba(255,224,0,0.08));
+    }
+    .boardHead h2{
+      margin:0;
+      font-family: "Press Start 2P", system-ui, sans-serif;
+      font-size: 12px;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: rgba(242,246,255,0.85);
+    }
+
+    .podium{
+      display:grid;
+      grid-template-columns: 1fr 1.2fr 1fr;
+      gap: 14px;
+      padding: 14px;
+    }
     .pod{
       border-radius: 16px;
       border: 1px solid rgba(255,255,255,0.14);
@@ -194,7 +200,6 @@
       backdrop-filter: blur(8px);
       box-shadow: 0 0 0 2px rgba(0,0,0,0.25) inset;
     }
-
     .pod::before{
       content:"";
       position:absolute;
@@ -203,14 +208,11 @@
       height: 160px;
       border-radius: 999px;
       opacity: 0.18;
-      filter: blur(0px);
       transform: rotate(15deg);
     }
-
     .pod.gold::before{ background: rgba(255,224,0,1); }
     .pod.silver::before{ background: rgba(0,229,255,1); }
     .pod.bronze::before{ background: rgba(255,43,214,1); }
-
     .pod .rank{
       font-family: "Press Start 2P", system-ui, sans-serif;
       font-size: 12px;
@@ -220,7 +222,6 @@
       margin-top: 10px;
       font-weight: 1000;
       font-size: 22px;
-      letter-spacing: 0.2px;
     }
     .pod .points{
       margin-top: 8px;
@@ -237,42 +238,24 @@
     }
 
     .tableWrap{
-      border-radius: 16px;
-      overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.14);
-      background: rgba(255,255,255,0.03);
-      backdrop-filter: blur(8px);
-      box-shadow: 0 0 0 2px rgba(0,0,0,0.25) inset;
+      border-top: 1px solid rgba(255,255,255,0.10);
     }
-
     table{
       width:100%;
       border-collapse: collapse;
     }
-
-    th, td{
-      padding: 14px 14px;
-      text-align:left;
-    }
-
+    th, td{ padding: 14px 14px; text-align:left; }
     th{
       font-family: "Press Start 2P", system-ui, sans-serif;
       font-size: 11px;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: rgba(242,246,255,0.70);
-      background: linear-gradient(90deg,
-        rgba(0,59,100,0.55),
-        rgba(255,224,0,0.08)
-      );
+      background: rgba(0,0,0,0.12);
       border-bottom: 1px solid rgba(255,255,255,0.10);
     }
-
-    tr{
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-    }
+    tr{ border-bottom: 1px solid rgba(255,255,255,0.06); }
     tr:last-child{ border-bottom:none; }
-
     td{
       font-size: 14px;
       color: rgba(242,246,255,0.92);
@@ -283,13 +266,11 @@
       font-family: "Press Start 2P", system-ui, sans-serif;
       font-size: 12px;
     }
-
     td.pointsCell{
       text-align:right;
       font-family: "Press Start 2P", system-ui, sans-serif;
       font-size: 12px;
     }
-
     .score{
       display:inline-flex;
       align-items:center;
@@ -301,13 +282,73 @@
       color: rgba(255,224,0,0.95);
       box-shadow: 0 0 18px rgba(255,224,0,0.12);
     }
+    .score.daily{
+      border-color: rgba(255,43,214,0.25);
+      background: rgba(255,43,214,0.10);
+      color: rgba(255,190,250,0.95);
+    }
 
-    .spark{
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-      background: var(--arcade-cyan);
-      box-shadow: 0 0 14px rgba(0,229,255,0.8);
+    .activity{
+      margin-top: 14px;
+      border-radius: 16px;
+      overflow:hidden;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 0 0 2px rgba(0,0,0,0.25) inset;
+    }
+    .activityHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+      background: linear-gradient(90deg, rgba(0,59,100,0.55), rgba(255,224,0,0.08));
+    }
+    .activityHead h2{
+      margin:0;
+      font-family: "Press Start 2P", system-ui, sans-serif;
+      font-size: 12px;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: rgba(242,246,255,0.85);
+    }
+    .txRow{
+      display:flex;
+      justify-content:space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      align-items:flex-start;
+    }
+    .txRow:last-child{ border-bottom:none; }
+    .txLeft{ display:flex; flex-direction:column; gap:6px; min-width: 0; }
+    .txName{
+      font-weight: 1000;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+    .txReason{
+      color: rgba(242,246,255,0.72);
+      font-size: 13px;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+      max-width: 820px;
+    }
+    .txRight{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:6px;
+      flex-shrink:0;
+    }
+    .txTime{
+      color: rgba(242,246,255,0.65);
+      font-size: 12px;
     }
 
     .msg{
@@ -316,9 +357,11 @@
       font-size: 13px;
     }
 
-    @media (max-width: 900px){
-      .grid{ grid-template-columns: 1fr; }
+    @media (max-width: 980px){
+      .dual{ grid-template-columns: 1fr; }
+      .podium{ grid-template-columns: 1fr; }
       .pod .name{ font-size: 20px; }
+      .txReason{ max-width: 70vw; }
     }
   </style>
 </head>
@@ -331,7 +374,7 @@
           <span class="badge"><span class="spark"></span> LIVE</span>
           <span class="pill">Auto-refresh: <strong id="refreshEvery">5s</strong></span>
           <span class="pill">Last updated: <strong id="lastUpdated">—</strong></span>
-          <span class="pill">Showing: <strong>Top 10</strong></span>
+          <span class="pill">Top 10</span>
         </div>
         <div id="msg" class="msg"></div>
       </div>
@@ -341,48 +384,112 @@
       </div>
     </div>
 
-    <!-- Podium -->
-    <div class="grid">
-      <div class="pod silver">
-        <div class="emoji">🥈</div>
-        <div class="rank">#2</div>
-        <div class="name" id="p2Name">—</div>
-        <div class="points" id="p2Points">—</div>
-      </div>
+    <div class="dual">
+      <!-- OVERALL -->
+      <section class="board">
+        <div class="boardHead">
+          <h2>Overall</h2>
+          <span class="pill">Field: <strong>points</strong></span>
+        </div>
 
-      <div class="pod gold">
-        <div class="emoji">🥇</div>
-        <div class="rank">#1</div>
-        <div class="name" id="p1Name">—</div>
-        <div class="points" id="p1Points">—</div>
-      </div>
+        <div class="podium">
+          <div class="pod silver">
+            <div class="emoji">🥈</div>
+            <div class="rank">#2</div>
+            <div class="name" id="p2Name">—</div>
+            <div class="points" id="p2Points">—</div>
+          </div>
 
-      <div class="pod bronze">
-        <div class="emoji">🥉</div>
-        <div class="rank">#3</div>
-        <div class="name" id="p3Name">—</div>
-        <div class="points" id="p3Points">—</div>
-      </div>
+          <div class="pod gold">
+            <div class="emoji">🥇</div>
+            <div class="rank">#1</div>
+            <div class="name" id="p1Name">—</div>
+            <div class="points" id="p1Points">—</div>
+          </div>
+
+          <div class="pod bronze">
+            <div class="emoji">🥉</div>
+            <div class="rank">#3</div>
+            <div class="name" id="p3Name">—</div>
+            <div class="points" id="p3Points">—</div>
+          </div>
+        </div>
+
+        <div class="tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 110px;">Rank</th>
+                <th>Name</th>
+                <th style="text-align:right;">Points</th>
+              </tr>
+            </thead>
+            <tbody id="rows">
+              <tr><td colspan="3" style="color: rgba(242,246,255,0.65);">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- DAILY -->
+      <section class="board">
+        <div class="boardHead">
+          <h2>Today (Earned)</h2>
+          <span class="pill">Field: <strong>dailyPoints</strong></span>
+        </div>
+
+        <div class="podium">
+          <div class="pod silver">
+            <div class="emoji">🥈</div>
+            <div class="rank">#2</div>
+            <div class="name" id="d2Name">—</div>
+            <div class="points" id="d2Points">—</div>
+          </div>
+
+          <div class="pod gold">
+            <div class="emoji">🥇</div>
+            <div class="rank">#1</div>
+            <div class="name" id="d1Name">—</div>
+            <div class="points" id="d1Points">—</div>
+          </div>
+
+          <div class="pod bronze">
+            <div class="emoji">🥉</div>
+            <div class="rank">#3</div>
+            <div class="name" id="d3Name">—</div>
+            <div class="points" id="d3Points">—</div>
+          </div>
+        </div>
+
+        <div class="tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 110px;">Rank</th>
+                <th>Name</th>
+                <th style="text-align:right;">Today</th>
+              </tr>
+            </thead>
+            <tbody id="drows">
+              <tr><td colspan="3" style="color: rgba(242,246,255,0.65);">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
 
-    <!-- Table -->
-    <div class="tableWrap">
-      <table>
-        <thead>
-          <tr>
-            <th style="width: 110px;">Rank</th>
-            <th>Name</th>
-            <th style="text-align:right;">Points</th>
-          </tr>
-        </thead>
-        <tbody id="rows">
-          <tr><td colspan="3" style="color: rgba(242,246,255,0.65);">Loading…</td></tr>
-        </tbody>
-      </table>
-    </div>
+    <!-- Recent Earns -->
+    <section class="activity">
+      <div class="activityHead">
+        <h2>Recent Earns</h2>
+        <span class="pill">Notes included</span>
+      </div>
+      <div id="recentTx">
+        <div class="txRow" style="color: rgba(242,246,255,0.65);">Loading…</div>
+      </div>
+    </section>
   </div>
 
-  <!-- Separate JS for this page -->
   <script type="module" src="./leaderboard.js"></script>
 </body>
 </html>
