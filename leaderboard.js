@@ -25,7 +25,7 @@ const db = getFirestore(app);
 const $ = (id) => document.getElementById(id);
 
 const REFRESH_SECONDS = 5;
-const TOP_N = 10;
+const TOP_N = 5;
 const RECENT_SHOW = 12;
 const RECENT_FETCH = 35; // fetch more then filter positive
 
